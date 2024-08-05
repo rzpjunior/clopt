@@ -4,3 +4,4 @@ pandas
 pydo
 plotly
 python-dotenv
+flask-caching
