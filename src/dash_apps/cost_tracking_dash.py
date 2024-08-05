@@ -1,10 +1,10 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-from services.real_time_service import fetch_do_cost_data
-from visualizations.real_time_charts import create_cost_chart, create_cost_table, create_cost_summary
+from services.cost_tracking_service import fetch_do_cost_data
+from visualizations.cost_tracking_charts import create_cost_chart, create_cost_table, create_cost_summary, create_detailed_chart
 
-def create_real_time_dashboard(server):
+def create_cost_tracking_dashboard(server):
     app = dash.Dash(__name__, server=server, url_base_pathname='/cost-tracking/')
 
     df = fetch_do_cost_data()
@@ -13,7 +13,7 @@ def create_real_time_dashboard(server):
     memories = df['memory'].unique()
 
     app.layout = html.Div([
-        html.H1('Real-Time Cost Dashboard'),
+        html.H1('Cost Tracking Dashboard'),
         html.Div(id='cost-summary'),
         dcc.DatePickerRange(
             id='date-picker-range',
@@ -40,6 +40,9 @@ def create_real_time_dashboard(server):
         ),
         dcc.Graph(id='cost-chart'),
         dcc.Graph(id='cost-table'),
+        dcc.Graph(id='detailed-chart', style={'display': 'none'}),
+        html.Button('Export Data', id='export-button'),
+        dcc.Download(id='download-dataframe-csv'),
         dcc.Interval(id='interval-component', interval=60000, n_intervals=0)
     ])
 
@@ -63,10 +66,31 @@ def create_real_time_dashboard(server):
             df = df[df['status'] == selected_status]
         if selected_memory and selected_memory != 'all':
             df = df[df['memory'] == int(selected_memory)]
-        
+
         cost_chart = create_cost_chart(df)
         cost_table = create_cost_table(df)
         cost_summary = create_cost_summary(df)
         return cost_chart, cost_table, cost_summary
+
+    @app.callback(
+        Output('detailed-chart', 'figure'),
+        [Input('cost-chart', 'clickData')]
+    )
+    def display_detailed_chart(clickData):
+        if clickData is None:
+            return {}
+        description = clickData['points'][0]['x']
+        df = fetch_do_cost_data()
+        detailed_chart = create_detailed_chart(df, description)
+        return detailed_chart
+
+    @app.callback(
+        Output('download-dataframe-csv', 'data'),
+        [Input('export-button', 'n_clicks')],
+        prevent_initial_call=True
+    )
+    def export_data(n_clicks):
+        df = fetch_do_cost_data()
+        return dcc.send_data_frame(df.to_csv, 'cost_data.csv')
 
     return app

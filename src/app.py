@@ -1,25 +1,26 @@
 from flask import Flask
 from config import Config
+from flask_caching import Cache
+
+cache = Cache()
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    cache.init_app(app)
+
     with app.app_context():
+        # Register blueprints
         from controllers.main_controller import bp as main_bp
-        from controllers.real_time_controller import bp as real_time_bp
-        # from controllers.recommendations_controller import bp as recommendations_bp
-        # from controllers.budget_alerts_controller import bp as budget_alerts_bp
-        # from controllers.historical_analysis_controller import bp as historical_analysis_bp
+        from controllers.cost_tracking_controller import bp as cost_tracking_bp
 
         app.register_blueprint(main_bp)
-        app.register_blueprint(real_time_bp, name='real_time_blueprint')
-        # app.register_blueprint(recommendations_bp, name='recommendations_blueprint')
-        # app.register_blueprint(budget_alerts_bp, name='budget_alerts_blueprint')
-        # app.register_blueprint(historical_analysis_bp, name='historical_analysis_blueprint')
+        app.register_blueprint(cost_tracking_bp)
 
-        from dash_apps.real_time_dash import create_real_time_dashboard
-        create_real_time_dashboard(app)
+        # Initialize Dash apps
+        from dash_apps.cost_tracking_dash import create_cost_tracking_dashboard
+        create_cost_tracking_dashboard(app)
 
     return app
 

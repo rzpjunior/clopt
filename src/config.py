@@ -7,3 +7,5 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
     DEBUG = os.getenv('DEBUG', 'True') == 'True'
     DIGITALOCEAN_API_TOKEN = os.getenv('DIGITALOCEAN_API_TOKEN')
+    CACHE_TYPE = 'simple' 
+    CACHE_DEFAULT_TIMEOUT = 300  

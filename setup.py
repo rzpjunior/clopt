@@ -12,6 +12,7 @@ setup(
         'pandas',
         'pydo',
         'python-dotenv',
+        'flask-caching',
         'plotly'
     ],
     entry_points={
