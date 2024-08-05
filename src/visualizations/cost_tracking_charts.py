@@ -41,3 +41,16 @@ def create_detailed_chart(df, description):
     filtered_df = df[df['description'] == description]
     fig = px.bar(filtered_df, x='date', y='amount', color='region', title=f'Cost Details for {description}')
     return fig
+
+def create_resource_type_chart(df):
+    if df.empty:
+        return {}
+    fig = px.pie(df, values='amount', names='resource_type', title='Cost Distribution by Resource Type')
+    return fig
+
+def create_trend_chart(df):
+    if df.empty:
+        return {}
+    fig = px.line(df, x='date', y='amount', title='Historical Cost Trend')
+    fig.update_traces(mode='lines+markers')
+    return fig

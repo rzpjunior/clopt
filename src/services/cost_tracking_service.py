@@ -31,7 +31,9 @@ def fetch_do_cost_data():
                 'status': droplet['status'],
                 'memory': droplet['size']['memory'],
                 'vcpus': droplet['size']['vcpus'],
-                'tags': ', '.join(droplet['tags'])
+                'disk': droplet['size']['disk'],
+                'tags': ', '.join(droplet['tags']),
+                'resource_type': 'Droplet'
             })
 
         df = pd.DataFrame(invoice_data)
