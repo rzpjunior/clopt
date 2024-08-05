@@ -10,9 +10,18 @@
     <header>
         <h1>Clopt - Cloud Cost Optimization Dashboard</h1>
     </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/dashboard/cost_tracking">Cost Tracking</a></li>
+                <!-- Add other navigation items here -->
+            </ul>
+        </nav>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     <footer>
         <p>© 2024 Clopt</p>
     </footer>
