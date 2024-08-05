@@ -1,5 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
 
 def create_cost_chart(df):
     if df.empty:
@@ -10,13 +11,17 @@ def create_cost_chart(df):
     return fig
 
 def create_cost_table(df):
+    formatted_df = df.copy()
+    formatted_df['date'] = pd.to_datetime(formatted_df['date']).dt.strftime('%Y-%m-%d')
+    formatted_df['amount'] = formatted_df['amount'].apply(lambda x: f"${x:,.2f}")
+    
     if df.empty:
         return {}
     fig = go.Figure(data=[go.Table(
-        header=dict(values=list(df.columns),
+        header=dict(values=list(formatted_df.columns),
                     fill_color='paleturquoise',
                     align='left'),
-        cells=dict(values=[df[col] for col in df.columns],
+        cells=dict(values=[formatted_df[col] for col in formatted_df.columns],
                    fill_color='lavender',
                    align='left'))
     ])
