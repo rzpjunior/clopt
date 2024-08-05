@@ -1,7 +1,8 @@
 import pandas as pd
 from pydo import Client
 from flask import current_app
-from app import cache  # Ensure this is imported correctly
+from app import cache
+from datetime import datetime
 
 def fetch_do_cost_data():
     token = current_app.config['DIGITALOCEAN_API_TOKEN']
@@ -17,15 +18,22 @@ def fetch_do_cost_data():
         invoice_data = []
 
         for droplet in droplets:
+            created_at = datetime.strptime(droplet['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+            current_time = datetime.utcnow()
+            hours_running = (current_time - created_at).total_seconds() / 3600
+            amount = droplet['size']['price_hourly'] * hours_running
+            
             invoice_data.append({
                 'description': droplet['name'],
-                'amount': droplet['size']['price_hourly'] * droplet['size']['memory'],
+                'amount': round(amount, 2),
                 'date': pd.to_datetime(droplet['created_at']),
                 'region': droplet['region']['name'],
                 'status': droplet['status'],
                 'memory': droplet['size']['memory'],
                 'vcpus': droplet['size']['vcpus'],
-                'tags': ', '.join(droplet['tags'])
+                'disk': droplet['size']['disk'],
+                'tags': ', '.join(droplet['tags']),
+                'resource_type': 'Droplet'
             })
 
         df = pd.DataFrame(invoice_data)

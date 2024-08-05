@@ -8,13 +8,22 @@
 </head>
 <body>
     <header>
-        <h1>Clopt - Cloud Cost Optimization Dashboard</h1>
+        <h2>Clopt - Cloud Cost Optimization Dashboard | ver 0.1.0</h2>
     </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/dashboard/cost_tracking">Cost Tracking</a></li>
+                <!-- Add other navigation items here -->
+            </ul>
+        </nav>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     <footer>
-        <p>© 2024 Clopt</p>
+        <p>© 2024 Clopt - Cloud Cost Optimization Dashboard | ver 0.1.0 by rzpjunior</p>
     </footer>
 </body>
 </html>
