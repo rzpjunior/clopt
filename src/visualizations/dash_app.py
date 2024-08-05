@@ -1,11 +1,11 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-from services.do_service import fetch_do_cost_data
-from visualizations.plotly_charts import create_cost_chart, create_cost_table
+from services.real_time_service import fetch_do_cost_data
+from visualizations.real_time_charts import create_cost_chart, create_cost_table
 
 def create_dashboard(server):
-    app = dash.Dash(__name__, server=server, url_base_pathname='/dashboard/')
+    app = dash.Dash(__name__, server=server, url_base_pathname='/real-time-dashboard/')
 
     app.layout = html.Div([
         html.H1('Cloud Cost Optimization Dashboard'),
@@ -13,7 +13,7 @@ def create_dashboard(server):
             id='region-dropdown',
             options=[
                 {'label': 'All Regions', 'value': 'all'},
-                {'label': 'Singapore', 'value': 'sgp'},
+                # Populate regions dynamically if needed
             ],
             value='all',
             multi=False

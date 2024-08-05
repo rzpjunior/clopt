@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
-from services.do_service import fetch_do_cost_data
+from services.real_time_service import fetch_do_cost_data
 
-bp = Blueprint('do', __name__, url_prefix='/api/do')
+bp = Blueprint('real_time', __name__, url_prefix='/api/real_time')
 
 @bp.route('/costs')
 def get_costs():

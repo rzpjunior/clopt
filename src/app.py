@@ -6,9 +6,17 @@ def create_app():
     app.config.from_object(Config)
 
     with app.app_context():
-        from controllers import main_controller, do_controller
-        app.register_blueprint(main_controller.bp)
-        app.register_blueprint(do_controller.bp, name='do_blueprint')
+        from controllers.main_controller import bp as main_bp
+        from controllers.real_time_controller import bp as real_time_bp
+        # from controllers.recommendations_controller import bp as recommendations_bp
+        # from controllers.budget_alerts_controller import bp as budget_alerts_bp
+        # from controllers.historical_analysis_controller import bp as historical_analysis_bp
+
+        app.register_blueprint(main_bp)
+        app.register_blueprint(real_time_bp, name='real_time_blueprint')
+        # app.register_blueprint(recommendations_bp, name='recommendations_blueprint')
+        # app.register_blueprint(budget_alerts_bp, name='budget_alerts_blueprint')
+        # app.register_blueprint(historical_analysis_bp, name='historical_analysis_blueprint')
 
         from visualizations.dash_app import create_dashboard
         create_dashboard(app)
