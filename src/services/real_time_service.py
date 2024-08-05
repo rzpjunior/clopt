@@ -17,7 +17,10 @@ def fetch_do_cost_data():
                 'amount': droplet['size']['price_hourly'] * droplet['size']['memory'],
                 'date': pd.to_datetime(droplet['created_at']),
                 'region': droplet['region']['name'],
-                'status': droplet['status']
+                'status': droplet['status'],
+                'memory': droplet['size']['memory'],
+                'vcpus': droplet['size']['vcpus'],
+                'tags': ', '.join(droplet['tags'])
             })
 
         df = pd.DataFrame(invoice_data)
