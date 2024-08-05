@@ -4,11 +4,11 @@ from dash.dependencies import Input, Output
 from services.real_time_service import fetch_do_cost_data
 from visualizations.real_time_charts import create_cost_chart, create_cost_table
 
-def create_dashboard(server):
+def create_real_time_dashboard(server):
     app = dash.Dash(__name__, server=server, url_base_pathname='/real-time-dashboard/')
 
     app.layout = html.Div([
-        html.H1('Cloud Cost Optimization Dashboard'),
+        html.H1('Real-Time Cost Dashboard'),
         dcc.Dropdown(
             id='region-dropdown',
             options=[

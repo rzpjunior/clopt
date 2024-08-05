@@ -18,8 +18,8 @@ def create_app():
         # app.register_blueprint(budget_alerts_bp, name='budget_alerts_blueprint')
         # app.register_blueprint(historical_analysis_bp, name='historical_analysis_blueprint')
 
-        from visualizations.dash_app import create_dashboard
-        create_dashboard(app)
+        from dash_apps.real_time_dash import create_real_time_dashboard
+        create_real_time_dashboard(app)
 
     return app
 
