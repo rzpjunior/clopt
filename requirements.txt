@@ -1,0 +1,6 @@
+flask
+dash
+pandas
+pydo
+plotly
+python-dotenv
