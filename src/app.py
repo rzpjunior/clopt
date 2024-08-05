@@ -13,10 +13,7 @@ def create_app():
     with app.app_context():
         # Register blueprints
         from controllers.main_controller import bp as main_bp
-        from controllers.cost_tracking_controller import bp as cost_tracking_bp
-
         app.register_blueprint(main_bp)
-        app.register_blueprint(cost_tracking_bp)
 
         # Initialize Dash apps
         from dash_apps.cost_tracking_dash import create_cost_tracking_dashboard

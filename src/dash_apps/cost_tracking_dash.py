@@ -13,7 +13,6 @@ def create_cost_tracking_dashboard(server):
     memories = df['memory'].unique()
 
     app.layout = html.Div([
-        html.H1('Cost Tracking Dashboard'),
         html.Div(id='cost-summary'),
         dcc.DatePickerRange(
             id='date-picker-range',
