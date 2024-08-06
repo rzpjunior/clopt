@@ -4,6 +4,17 @@ from flask import current_app
 from app import cache
 from datetime import datetime
 
+# Define the DigitalOcean pricing table as a dictionary
+pricing_table = {
+    (1, 512): (0.00595, 4.00),
+    (1, 1024): (0.00893, 6.00),
+    (1, 2048): (0.01786, 12.00),
+    (2, 2048): (0.02679, 18.00),
+    (2, 4096): (0.03571, 24.00),
+    (4, 8192): (0.07143, 48.00),
+    (8, 16384): (0.14286, 96.00)
+}
+
 def fetch_do_usage_data():
     token = current_app.config['DIGITALOCEAN_API_TOKEN']
     client = Client(token=token)
@@ -22,7 +33,9 @@ def fetch_do_usage_data():
             current_time = datetime.utcnow()
             hours_running = (current_time - created_at).total_seconds() / 3600
             amount = droplet['size']['price_hourly'] * hours_running
-            
+            hourly_cost = droplet['size']['price_hourly']
+            monthly_cost = hourly_cost * 24 * 30
+
             usage_data.append({
                 'name': droplet['name'],
                 'region': droplet['region']['name'],
@@ -30,7 +43,10 @@ def fetch_do_usage_data():
                 'memory': droplet['size']['memory'],
                 'vcpus': droplet['size']['vcpus'],
                 'hours_running': hours_running,
-                'amount': round(amount, 2)
+                'amount': round(amount, 2),
+                'price_hourly': f"${hourly_cost:.5f}",
+                'current_hourly_cost': round(hourly_cost, 5),
+                'current_monthly_cost': round(monthly_cost, 2)
             })
 
         df = pd.DataFrame(usage_data)
@@ -45,49 +61,60 @@ def generate_cost_saving_recommendations():
     df = fetch_do_usage_data()
     recommendations = []
 
-    # Example logic for underutilized resources
-    underutilized_droplets = df[(df['hours_running'] > 720) & (df['vcpus'] > 1)]
-    for index, row in underutilized_droplets.iterrows():
-        current_cost = row['amount']
-        current_price_hourly = current_cost / row['hours_running']
-        suggested_price_hourly = current_price_hourly / row['vcpus']
-        suggested_cost = suggested_price_hourly * row['hours_running']
-        potential_savings = current_cost - suggested_cost
-
+    for index, row in df.iterrows():
         recommendations.append({
             'name': row['name'],
             'region': row['region'],
             'current_vcpus': row['vcpus'],
-            'suggested_vcpus': 1,
-            'potential_savings': round(potential_savings, 2),
+            'memory': row['memory'],
             'amount': row['amount'],
             'hours_running': row['hours_running'],
-            'memory': row['memory']
+            'price_hourly': row['price_hourly'],
+            'current_hourly_cost': round(row['current_hourly_cost'], 5),
+            'current_monthly_cost': row['current_monthly_cost']
         })
 
     recommendations_df = pd.DataFrame(recommendations)
     return recommendations_df
 
+def slice_nodes(df, sim_nodes):
+    df['base_name'] = df['name'].apply(lambda x: '-'.join(x.split('-')[:-1]))
+    base_names = df['base_name'].unique()
+
+    sliced_df = pd.DataFrame()
+    for base_name in base_names:
+        nodes = df[df['base_name'] == base_name].head(sim_nodes)
+        sliced_df = pd.concat([sliced_df, nodes])
+
+    return sliced_df.drop(columns=['base_name'])
+
 def simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes):
     if df.empty:
         return df
 
-    print("DataFrame before simulation:")
-    print(df.head())
-
-    df['hourly_cost'], df['monthly_cost'] = zip(*df.apply(lambda row: calculate_simulated_cost(row, sim_vcpus, sim_memory, sim_nodes), axis=1))
+    df = slice_nodes(df, sim_nodes)
+    df['simulated_hourly_cost'], df['simulated_monthly_cost'], df['potential_savings'] = zip(*df.apply(lambda row: calculate_simulated_cost(row, sim_vcpus, sim_memory), axis=1))
     return df
 
-def calculate_simulated_cost(row, sim_vcpus, sim_memory, sim_nodes):
+def calculate_simulated_cost(row, sim_vcpus, sim_memory):
     try:
-        sim_price_hourly = (row['amount'] / row['hours_running']) * (sim_vcpus / row['current_vcpus']) * (sim_memory / row['memory'])
-        hourly_cost = round(sim_price_hourly, 2)
-        monthly_cost = round(hourly_cost * 24 * 30 * sim_nodes, 2)
-        return hourly_cost, monthly_cost
+        # Get the simulated price from the pricing table
+        if (sim_vcpus, sim_memory) in pricing_table:
+            sim_price_hourly, sim_price_monthly = pricing_table[(sim_vcpus, sim_memory)]
+        else:
+            # Default values if not found in pricing table
+            sim_price_hourly, sim_price_monthly = 0.00000, 0.00
+        
+        current_cost = row['current_hourly_cost']
+        simulated_hourly_cost = sim_price_hourly
+        simulated_monthly_cost = sim_price_monthly
+        potential_savings = (current_cost - sim_price_hourly) * row['hours_running']
+        
+        return simulated_hourly_cost, simulated_monthly_cost, potential_savings
     except KeyError as e:
         print(f"KeyError: {e} not found in row")
         print(row)
-        return 0, 0
+        return 0.00000, 0.00, 0.00
     except Exception as e:
         print(f"An error occurred during simulation: {e}")
-        return 0, 0
+        return 0.00000, 0.00, 0.00

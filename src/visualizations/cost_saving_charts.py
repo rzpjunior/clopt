@@ -8,6 +8,8 @@ def create_recommendations_table(df):
     
     formatted_df = df.copy()
     formatted_df['potential_savings'] = formatted_df['potential_savings'].apply(lambda x: f"${x:,.2f}")
+    formatted_df['current_hourly_cost'] = formatted_df['current_hourly_cost'].apply(lambda x: f"${float(x):,.5f}")
+    formatted_df['current_monthly_cost'] = formatted_df['current_monthly_cost'].apply(lambda x: f"${x:,.2f}")
     
     fig = go.Figure(data=[go.Table(
         header=dict(values=list(formatted_df.columns),
