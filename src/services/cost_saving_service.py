@@ -60,9 +60,34 @@ def generate_cost_saving_recommendations():
             'current_vcpus': row['vcpus'],
             'suggested_vcpus': 1,
             'potential_savings': round(potential_savings, 2),
-            'amount': row['amount']
+            'amount': row['amount'],
+            'hours_running': row['hours_running'],
+            'memory': row['memory']
         })
 
     recommendations_df = pd.DataFrame(recommendations)
     return recommendations_df
 
+def simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes):
+    if df.empty:
+        return df
+
+    print("DataFrame before simulation:")
+    print(df.head())
+
+    df['hourly_cost'], df['monthly_cost'] = zip(*df.apply(lambda row: calculate_simulated_cost(row, sim_vcpus, sim_memory, sim_nodes), axis=1))
+    return df
+
+def calculate_simulated_cost(row, sim_vcpus, sim_memory, sim_nodes):
+    try:
+        sim_price_hourly = (row['amount'] / row['hours_running']) * (sim_vcpus / row['current_vcpus']) * (sim_memory / row['memory'])
+        hourly_cost = round(sim_price_hourly, 2)
+        monthly_cost = round(hourly_cost * 24 * 30 * sim_nodes, 2)
+        return hourly_cost, monthly_cost
+    except KeyError as e:
+        print(f"KeyError: {e} not found in row")
+        print(row)
+        return 0, 0
+    except Exception as e:
+        print(f"An error occurred during simulation: {e}")
+        return 0, 0
