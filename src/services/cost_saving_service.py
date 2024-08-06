@@ -42,10 +42,10 @@ def fetch_do_usage_data():
                 'memory': droplet['size']['memory'],
                 'vcpus': droplet['size']['vcpus'],
                 'hours_running': hours_running,
-                'amount': round(amount, 2),
                 'price_hourly': f"${hourly_cost:.5f}",
                 'current_hourly_cost': round(hourly_cost, 5),
-                'current_monthly_cost': round(monthly_cost, 2)
+                'current_monthly_cost': round(monthly_cost, 2),
+                'amount': round(amount, 2)
             })
 
         df = pd.DataFrame(usage_data)
@@ -91,7 +91,7 @@ def simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes):
         return df
 
     df = slice_nodes(df, sim_nodes)
-    df['simulated_hourly_cost'], df['simulated_monthly_cost'], df['potential_savings'], df['deduction'] = zip(*df.apply(lambda row: calculate_simulated_cost(row, sim_vcpus, sim_memory), axis=1))
+    df['simulated_hourly_cost'], df['simulated_monthly_cost'], df['potential_savings'], df['amount_to_pay'] = zip(*df.apply(lambda row: calculate_simulated_cost(row, sim_vcpus, sim_memory), axis=1))
     return df
 
 def calculate_simulated_cost(row, sim_vcpus, sim_memory):

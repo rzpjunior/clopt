@@ -13,6 +13,15 @@ vcpu_memory_mapping = {
     8: [16384]
 }
 
+def get_base_names(df):
+    df['base_name'] = df['name'].apply(lambda x: '-'.join(x.split('-')[:-2]))
+    return df['base_name'].unique()
+
+def filter_by_base_name(df, base_name):
+    if base_name == 'all':
+        return df
+    return df[df['name'].str.startswith(base_name)]
+
 def create_cost_saving_dashboard(server):
     dash_app = dash.Dash(
         __name__,
@@ -22,16 +31,27 @@ def create_cost_saving_dashboard(server):
     )
 
     df = generate_cost_saving_recommendations()
+    base_names = get_base_names(df)
 
     dash_app.layout = html.Div([
         dcc.Store(id='data-store', data=df.to_dict('records')),
         html.Div([
             html.Div([
+                html.Label('Select Droplet Base Name:', className='filter-label'),
+                dcc.Dropdown(
+                    id='base-name-dropdown',
+                    options=[{'label': base_name, 'value': base_name} for base_name in base_names] + [{'label': 'All', 'value': 'all'}],
+                    value='all',
+                    multi=False,
+                    className='dropdown'
+                ),
+            ], className='filter-item'),
+            html.Div([
                 html.Label('Simulate vCPUs:', className='filter-label'),
                 dcc.Dropdown(
                     id='sim-vcpus',
                     options=[{'label': f'{vcpu} vCPUs', 'value': vcpu} for vcpu in vcpu_memory_mapping.keys()],
-                    value=1,
+                    value=None,
                     multi=False,
                     className='dropdown'
                 ),
@@ -41,7 +61,7 @@ def create_cost_saving_dashboard(server):
                 dcc.Dropdown(
                     id='sim-memory',
                     options=[{'label': f'{memory} MiB', 'value': memory} for memory in vcpu_memory_mapping[1]],
-                    value=512,
+                    value=None,
                     multi=False,
                     className='dropdown'
                 ),
@@ -51,7 +71,7 @@ def create_cost_saving_dashboard(server):
                 dcc.Dropdown(
                     id='sim-nodes',
                     options=[{'label': f'{nodes} Nodes', 'value': nodes} for nodes in range(1, 21)],
-                    value=1,
+                    value=None,
                     multi=False,
                     className='dropdown'
                 ),
@@ -84,12 +104,14 @@ def create_cost_saving_dashboard(server):
          Output('savings-potential-chart', 'figure'),
          Output('cost-breakdown-chart', 'figure')],
         [Input('data-store', 'data'),
+         Input('base-name-dropdown', 'value'),
          Input('sim-vcpus', 'value'),
          Input('sim-memory', 'value'),
          Input('sim-nodes', 'value')]
     )
-    def update_dashboard(data, sim_vcpus, sim_memory, sim_nodes):
+    def update_dashboard(data, base_name, sim_vcpus, sim_memory, sim_nodes):
         df = pd.DataFrame(data)
+        df = filter_by_base_name(df, base_name)
         df = simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes)
 
         recommendations_table = create_recommendations_table(df)
