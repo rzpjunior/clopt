@@ -6,6 +6,10 @@ bp = Blueprint('main', __name__)
 def index():
     return render_template('index.html')
 
-@bp.route('/dashboard/cost_tracking/')
-def cost_tracking_dashboard():
+@bp.route('/dashboard/cost-tracking/')
+def cost_tracking():
     return render_template('cost_tracking_dashboard.html')
+
+@bp.route('/dashboard/cost-saving/')
+def cost_saving():
+    return render_template('cost_saving_dashboard.html')
