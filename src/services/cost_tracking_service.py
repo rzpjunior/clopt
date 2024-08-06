@@ -22,10 +22,12 @@ def fetch_do_cost_data():
             current_time = datetime.utcnow()
             hours_running = (current_time - created_at).total_seconds() / 3600
             amount = droplet['size']['price_hourly'] * hours_running
+            hourly_price = droplet['size']['price_hourly']
             
             invoice_data.append({
                 'description': droplet['name'],
                 'amount': round(amount, 2),
+                'hourly_price': round(hourly_price, 2),
                 'date': pd.to_datetime(droplet['created_at']),
                 'region': droplet['region']['name'],
                 'status': droplet['status'],
