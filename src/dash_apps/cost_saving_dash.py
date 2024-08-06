@@ -5,6 +5,14 @@ from services.cost_saving_service import generate_cost_saving_recommendations, s
 from visualizations.cost_saving_charts import create_recommendations_table, create_savings_potential_chart, create_cost_breakdown_chart
 import pandas as pd
 
+# Define the specifications for vCPUs and memory based on the provided image
+vcpu_memory_mapping = {
+    1: [512, 1024, 2048],
+    2: [2048, 4096],
+    4: [8192],
+    8: [16384]
+}
+
 def create_cost_saving_dashboard(server):
     dash_app = dash.Dash(
         __name__,
@@ -14,36 +22,25 @@ def create_cost_saving_dashboard(server):
     )
 
     df = generate_cost_saving_recommendations()
-    regions = df['region'].unique()
 
     dash_app.layout = html.Div([
         dcc.Store(id='data-store', data=df.to_dict('records')),
         html.Div([
             html.Div([
-                html.Label('Select Region:', className='filter-label'),
-                dcc.Dropdown(
-                    id='region-dropdown',
-                    options=[{'label': region, 'value': region} for region in regions],
-                    value='all',
-                    multi=False,
-                    className='dropdown'
-                ),
-            ], className='filter-item'),
-            html.Div([
                 html.Label('Simulate vCPUs:', className='filter-label'),
                 dcc.Dropdown(
                     id='sim-vcpus',
-                    options=[{'label': f'{vcpus} vCPUs', 'value': vcpus} for vcpus in range(1, 17)],
+                    options=[{'label': f'{vcpu} vCPUs', 'value': vcpu} for vcpu in vcpu_memory_mapping.keys()],
                     value=1,
                     multi=False,
                     className='dropdown'
                 ),
             ], className='filter-item'),
             html.Div([
-                html.Label('Simulate Memory (MB):', className='filter-label'),
+                html.Label('Simulate Memory (MiB):', className='filter-label'),
                 dcc.Dropdown(
                     id='sim-memory',
-                    options=[{'label': f'{memory} MB', 'value': memory} for memory in range(512, 65536, 512)],
+                    options=[{'label': f'{memory} MiB', 'value': memory} for memory in vcpu_memory_mapping[1]],
                     value=512,
                     multi=False,
                     className='dropdown'
@@ -76,20 +73,23 @@ def create_cost_saving_dashboard(server):
         return [generate_cost_saving_recommendations().to_dict('records')]
 
     @dash_app.callback(
+        Output('sim-memory', 'options'),
+        [Input('sim-vcpus', 'value')]
+    )
+    def set_memory_options(selected_vcpus):
+        return [{'label': f'{memory} MiB', 'value': memory} for memory in vcpu_memory_mapping[selected_vcpus]]
+
+    @dash_app.callback(
         [Output('recommendations-table', 'figure'),
          Output('savings-potential-chart', 'figure'),
          Output('cost-breakdown-chart', 'figure')],
         [Input('data-store', 'data'),
-         Input('region-dropdown', 'value'),
          Input('sim-vcpus', 'value'),
          Input('sim-memory', 'value'),
          Input('sim-nodes', 'value')]
     )
-    def update_dashboard(data, selected_region, sim_vcpus, sim_memory, sim_nodes):
+    def update_dashboard(data, sim_vcpus, sim_memory, sim_nodes):
         df = pd.DataFrame(data)
-        if selected_region and selected_region != 'all':
-            df = df[df['region'] == selected_region]
-
         df = simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes)
 
         recommendations_table = create_recommendations_table(df)
