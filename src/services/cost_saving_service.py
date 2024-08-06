@@ -4,7 +4,6 @@ from flask import current_app
 from app import cache
 from datetime import datetime
 
-# Define the DigitalOcean pricing table as a dictionary
 pricing_table = {
     (1, 512): (0.00595, 4.00),
     (1, 1024): (0.00893, 6.00),
@@ -67,9 +66,8 @@ def generate_cost_saving_recommendations():
             'region': row['region'],
             'current_vcpus': row['vcpus'],
             'memory': row['memory'],
-            'amount': row['amount'],
             'hours_running': row['hours_running'],
-            'price_hourly': row['price_hourly'],
+            'amount': row['amount'],
             'current_hourly_cost': round(row['current_hourly_cost'], 5),
             'current_monthly_cost': row['current_monthly_cost']
         })
@@ -98,11 +96,9 @@ def simulate_cost_savings(df, sim_vcpus, sim_memory, sim_nodes):
 
 def calculate_simulated_cost(row, sim_vcpus, sim_memory):
     try:
-        # Get the simulated price from the pricing table
         if (sim_vcpus, sim_memory) in pricing_table:
             sim_price_hourly, sim_price_monthly = pricing_table[(sim_vcpus, sim_memory)]
         else:
-            # Default values if not found in pricing table
             sim_price_hourly, sim_price_monthly = 0.00000, 0.00
         
         current_cost = row['current_hourly_cost']
