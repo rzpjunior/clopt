@@ -17,7 +17,9 @@ def create_app():
 
         # Initialize Dash apps
         from dash_apps.cost_tracking_dash import create_cost_tracking_dashboard
+        from dash_apps.cost_saving_dash import create_cost_saving_dashboard
         create_cost_tracking_dashboard(app)
+        create_cost_saving_dashboard(app)
 
     return app
 
