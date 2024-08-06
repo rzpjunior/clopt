@@ -14,12 +14,14 @@ def create_cost_table(df):
     formatted_df = df.copy()
     formatted_df['date'] = pd.to_datetime(formatted_df['date']).dt.strftime('%Y-%m-%d')
     formatted_df['amount'] = formatted_df['amount'].apply(lambda x: f"${x:,.2f}")
+    formatted_df['hourly_price'] = formatted_df['hourly_price'].apply(lambda x: f"${x:,.2f}")
 
     if df.empty:
         return {}
 
     total_amount = df['amount'].sum()
-    total_row = ['Total Amount', f"${total_amount:,.2f}", '', '', '', '', '', '']
+    total_hourly_price = df['hourly_price'].sum()
+    total_row = ['Total', f"${total_amount:,.2f}", f"${total_hourly_price:,.2f}", '', '', '', '', '']
 
     if len(total_row) < len(formatted_df.columns):
         total_row.extend([''] * (len(formatted_df.columns) - len(total_row)))
@@ -43,7 +45,7 @@ def create_cost_table(df):
     )
     
     fig.update_traces(
-        columnwidth=[150, 60, 70, 70, 40, 40, 40, 40, 100, 50],
+        columnwidth=[150, 40, 40, 40, 40, 40, 40, 40, 40, 100, 40],
     )
     return fig
 
