@@ -13,9 +13,11 @@ def create_recommendations_table(df):
     total_simulated_hourly_cost = df['simulated_hourly_cost'].sum()
     total_simulated_monthly_cost = df['simulated_monthly_cost'].sum()
     total_potential_savings = df['potential_savings'].sum()
+    total_deduction = df['amount_to_pay'].sum()
 
     formatted_df = df.copy()
     formatted_df['potential_savings'] = formatted_df['potential_savings'].apply(lambda x: f"${x:,.2f}")
+    formatted_df['amount_to_pay'] = formatted_df['amount_to_pay'].apply(lambda x: f"${x:,.2f}")
     formatted_df['current_hourly_cost'] = formatted_df['current_hourly_cost'].apply(lambda x: f"${x:,.5f}")
     formatted_df['current_monthly_cost'] = formatted_df['current_monthly_cost'].apply(lambda x: f"${x:,.2f}")
     formatted_df['simulated_hourly_cost'] = formatted_df['simulated_hourly_cost'].apply(lambda x: f"${x:,.5f}")
@@ -35,12 +37,20 @@ def create_recommendations_table(df):
         'simulated_hourly_cost': f"${total_simulated_hourly_cost:,.5f}",
         'simulated_monthly_cost': f"${total_simulated_monthly_cost:,.2f}",
         'potential_savings': f"${total_potential_savings:,.2f}",
+        'amount_to_pay': f"${total_deduction:,.2f}",
         'amount': f"${total_amount:,.2f}"
     }])
 
     formatted_df = pd.concat([formatted_df, total_row], ignore_index=True)
 
-    fill_color = [['lavender'] * (len(formatted_df) - 1) + ['lightyellow']]
+    fill_color = [['lavender'] * len(formatted_df) for _ in range(len(formatted_df.columns))]
+    for i, col in enumerate(formatted_df.columns):
+        if col in ['simulated_hourly_cost', 'simulated_monthly_cost', 'potential_savings']:
+            fill_color[i] = ['lightgreen'] * len(formatted_df)
+            fill_color[i][-1] = 'lightyellow'
+        elif col in ['amount_to_pay']:
+            fill_color[i] = ['tomato'] * len(formatted_df)
+            fill_color[i][-1] = 'lightyellow'
 
     fig = go.Figure(data=[go.Table(
         header=dict(values=list(formatted_df.columns),
